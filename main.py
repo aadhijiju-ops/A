@@ -7,10 +7,13 @@ st.set_page_config(page_title="Excel Merger Bot", page_icon="🤖")
 
 st.title("Excel Merger Bot 🤖")
 
-# Initialize chat history in session state
+# Initialize chat history
 if "messages" not in st.session_state:
     st.session_state.messages = [
-        {"role": "assistant", "content": "Hi there! Upload your Excel files below, and I'll merge them into one single file for you."}
+        {
+            "role": "assistant",
+            "content": "Hi there! Upload your Excel files below, and I'll merge them into one single file for you."
+        }
     ]
 
 # Display previous chat messages
@@ -18,41 +21,55 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# File uploader widget
-uploaded_files = st.file_uploader("Upload Excel files here", type=["xlsx", "xls"], accept_multiple_files=True)
+# Upload files
+uploaded_files = st.file_uploader(
+    "Upload Excel files here",
+    type=["xlsx", "xls"],
+    accept_multiple_files=True
+)
 
-# Logic to handle the uploaded files
+# Process uploaded files
 if uploaded_files:
-    # Only trigger if exactly 3 files are uploaded (or you can remove the len check to allow any amount)
+
     with st.chat_message("user"):
-        st.markdown(f"I have uploaded {len(uploaded_files)} files.")
+        st.markdown(f"I have uploaded **{len(uploaded_files)}** file(s).")
 
     with st.chat_message("assistant"):
+
         if len(uploaded_files) < 2:
-            st.warning("Please upload at least 2 files to merge them.")
+            st.warning("Please upload at least 2 Excel files to merge.")
+
         else:
-            st.markdown("Processing and merging your files now...")
+            st.markdown("Processing and merging your files...")
 
             try:
-                # 1. Read all uploaded files into a list of DataFrames
+                # Read all Excel files
                 dataframes = [pd.read_excel(file) for file in uploaded_files]
 
-                # 2. Combine them all together
+                # Merge them
                 merged_df = pd.concat(dataframes, ignore_index=True)
 
-                # 3. convert the merged dataframe back to an Excel file in memory
+                # Save merged dataframe to memory
                 output = io.BytesIO()
+
                 with pd.ExcelWriter(output, engine="openpyxl") as writer:
-                    merged_df.to_excel(writer,  index=False, sheet_name='merged data')
+                    merged_df.to_excel(
+                        writer,
+                        index=False,
+                        sheet_name="Merged Data"
+                    )
 
-                processed_data = output.getvalue()
+                output.seek(0)
 
-                st.success("success! I've merged the files. You can download the result below.")
+                st.success("✅ Success! Your files have been merged.")
 
-                # 4. provide the download button
+                # Download button
                 st.download_button(
-                    label=" download merged excel",
-                    data=processed_data,
-                    file_name="merged_output.xlsx",  # <--- Added the missing comma right here!
+                    label="📥 Download Merged Excel",
+                    data=output,
+                    file_name="merged_output.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 )
+
+            except Exception as e:
+                st.error(f"An error occurred while merging the files:\n\n{e}")
