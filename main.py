@@ -53,8 +53,6 @@ if uploaded_files:
                 st.download_button(
                     label=" download merged excel",
                     data=processed_data,
-                    file_name="merged_output.xlsx"
+                    file_name="merged_output.xlsx",  # <--- Added the missing comma right here!
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 )
-except Exception as e:
-    st.error(f"an error occured while merging {e}. please ensure all files have the same structure.")
